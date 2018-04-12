@@ -5,6 +5,8 @@ import java.util.UUID
 
 import cats.Monad
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
 case class User(id: UUID, loyaltyPoints: Int)
@@ -33,6 +35,13 @@ trait FutureUserRepository extends UserRepository[Future] {
 
 object Main extends App {
 
-  val result: Future[Either[String, Unit]] = new LoyaltyPoints(new FutureUserRepository {}).addPoints(UUID.randomUUID(), 10)
+  val resultFuture: Future[Either[String, Unit]] = new LoyaltyPoints(new FutureUserRepository {}).addPoints(UUID.randomUUID(), 10)
+
+  val result = Await.result(resultFuture, 10 second)
+
+  result match {
+    case Right(user) => println(user)
+    case Left(message) => println(message)
+  }
 
 }
